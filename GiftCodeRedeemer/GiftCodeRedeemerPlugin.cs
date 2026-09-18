@@ -1,3 +1,4 @@
+using AngleSharp.Dom;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Plugins.Interfaces;
@@ -69,10 +70,14 @@ internal sealed partial class GiftCodeRedeemerPlugin : IBotCommand2, IGitHubPlug
 
 		using HtmlDocumentResponse? response = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
 
-		string? content = response?.Content?.DocumentElement?.OuterHtml;
-
-		if (string.IsNullOrEmpty(content)) {
+		if (response?.Content == null) {
 			return bot.Commands.FormatBotResponse(Strings.WarningFailed);
+		}
+
+		string? error = response.Content.QuerySelector("#error_box .error, #error_box")?.TextContent.Trim();
+
+		if (!string.IsNullOrEmpty(error)) {
+			return bot.Commands.FormatBotResponse(error);
 		}
 
 		return bot.Commands.FormatBotResponse(Strings.Success);
